@@ -1,7 +1,9 @@
 name: Enforce Squash Merge Policy
+
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+
 jobs:
   check-merge-strategy:
     runs-on: ubuntu-latest
@@ -10,12 +12,16 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+
       - name: Enforce Squash Merge Only
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          COMMITS=$(git rev-list HEAD^..HEAD --count)
-          echo "Commits: $COMMITS"
+          COMMITS=$(git rev-list $BASE_SHA..$HEAD_SHA --count)
+          echo "Number of commits in PR: $COMMITS"
           if [ "$COMMITS" -gt 1 ]; then
-            echo "FAILED - Too many commits!"
+            echo "❌ PR has $COMMITS commits - FAILED!"
             exit 1
           fi
-          echo "OK - Single commit!"
+          echo "✅ PR has single commit - OK!"
