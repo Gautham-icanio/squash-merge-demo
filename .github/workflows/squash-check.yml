@@ -1,14 +1,21 @@
 name: Enforce Squash Merge Policy
-
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-
 jobs:
   check-merge-strategy:
     runs-on: ubuntu-latest
     steps:
-      - name: Check Squash Merge Policy
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Enforce Squash Merge Only
         run: |
-          echo "✅ Squash and merge policy is enforced via repository settings"
-          echo "✅ Only squash merging is allowed in this repository"
+          COMMITS=$(git rev-list HEAD^..HEAD --count)
+          echo "Commits: $COMMITS"
+          if [ "$COMMITS" -gt 1 ]; then
+            echo "FAILED - Too many commits!"
+            exit 1
+          fi
+          echo "OK - Single commit!"
